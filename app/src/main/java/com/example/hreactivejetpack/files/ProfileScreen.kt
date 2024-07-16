@@ -62,6 +62,7 @@ import com.example.hreactivejetpack.model.Response.EditProfileResponse
 import com.example.hreactivejetpack.utils.ApiState
 import com.example.hreactivejetpack.utils.CallDatePicker
 import com.example.hreactivejetpack.utils.GlobalVaribles
+import com.example.hreactivejetpack.utils.UserDataPref
 import com.example.hreactivejetpack.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +75,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 @Composable
-fun ProfileScreen(viewModel: UserViewModel, navController: NavHostController){
+fun ProfileScreen(viewModel: UserViewModel, navController: NavHostController,userDataPref: UserDataPref){
     BackHandler {
         navController.navigate("Home") {
             popUpTo(navController.graph.startDestinationId) {
@@ -248,6 +249,10 @@ fun PersonalLayout(response: EmployeeDetailResposne.Result?,userViewModel: UserV
     var maritalSelectedItem by remember { mutableStateOf(maritalItems[0]) }
     val nationalityItems = listOf("Indian", "Foreigner")
     var nationalitySelectedItem by remember { mutableStateOf(nationalityItems[0]) }
+    var isEditClick by remember { mutableStateOf(false) }
+    var isEditName by remember {
+        mutableStateOf("Edit")
+    }
     val editProfileResponse by userViewModel.editProfileResponse
     val responseData = editProfileResponse.data?.result
     if (responseData != null){
@@ -323,66 +328,76 @@ fun PersonalLayout(response: EmployeeDetailResposne.Result?,userViewModel: UserV
                 )
                 Card(
                     onClick = {
-                        val image = GlobalVaribles.globalProfilePicture
-                        println("sadhna name ${firstName.text}")
-                        val file = File(image)
-                        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                        val body =
-                            MultipartBody.Part.createFormData("image", file.name, requestFile)
-                        val MultiFirstName =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), firstName.text)
-                        val MultilastName =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), lastName.text)
-                        val MultiselectedDate =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), selectedDate)
-                        val Multigender =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), genderSelectedItem)
-                        val MultiMarital = RequestBody.create(
-                            "text/plain".toMediaTypeOrNull(),
-                            maritalSelectedItem
-                        )
-                        val MultiNationality = RequestBody.create(
-                            "text/plain".toMediaTypeOrNull(),
-                            nationalitySelectedItem
-                        )
-                        val MultiUserName =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), userName.text)
-                        val MultiEmailId =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), emailId.text)
-                        val MultiMobileNo =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), mobileNo.text)
-                        val MultiAddress =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), address.text)
-                        val MultiGraducation =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), edGraduation.text)
-                        val MultiIntermidiate = RequestBody.create(
-                            "text/plain".toMediaTypeOrNull(),
-                            edIntermediate.text
-                        )
-                        val multiHigh =
-                            RequestBody.create("text/plain".toMediaTypeOrNull(), edHigh.text)
-                        if (image != "") {
-                            userViewModel.editProfileWithImage(
-                                context,
-                                body,
-                                MultiFirstName,
-                                MultilastName,
-                                MultiselectedDate,
-                                Multigender,
-                                MultiMarital,
-                                MultiNationality,
-                                MultiUserName,
-                                MultiEmailId,
-                                "91",
-                                MultiMobileNo,
-                                MultiAddress,
-                                MultiGraducation,
-                                MultiIntermidiate,
-                                multiHigh
+
+                        if (isEditClick){
+                            isEditClick = false
+                           isEditName = "Edit"
+                            val image = GlobalVaribles.globalProfilePicture
+                            println("sadhna name ${firstName.text}")
+                            val file = File(image)
+                            val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                            val body =
+                                MultipartBody.Part.createFormData("image", file.name, requestFile)
+                            val MultiFirstName =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), firstName.text)
+                            val MultilastName =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), lastName.text)
+                            val MultiselectedDate =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), selectedDate)
+                            val Multigender =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), genderSelectedItem)
+                            val MultiMarital = RequestBody.create(
+                                "text/plain".toMediaTypeOrNull(),
+                                maritalSelectedItem
                             )
+                            val MultiNationality = RequestBody.create(
+                                "text/plain".toMediaTypeOrNull(),
+                                nationalitySelectedItem
+                            )
+                            val MultiUserName =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), userName.text)
+                            val MultiEmailId =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), emailId.text)
+                            val MultiMobileNo =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), mobileNo.text)
+                            val MultiAddress =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), address.text)
+                            val MultiGraducation =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), edGraduation.text)
+                            val MultiIntermidiate = RequestBody.create(
+                                "text/plain".toMediaTypeOrNull(),
+                                edIntermediate.text
+                            )
+                            val multiHigh =
+                                RequestBody.create("text/plain".toMediaTypeOrNull(), edHigh.text)
+                            if (image != "") {
+                                userViewModel.editProfileWithImage(
+                                    context,
+                                    body,
+                                    MultiFirstName,
+                                    MultilastName,
+                                    MultiselectedDate,
+                                    Multigender,
+                                    MultiMarital,
+                                    MultiNationality,
+                                    MultiUserName,
+                                    MultiEmailId,
+                                    "91",
+                                    MultiMobileNo,
+                                    MultiAddress,
+                                    MultiGraducation,
+                                    MultiIntermidiate,
+                                    multiHigh
+                                )
+                            }else{
+                                userViewModel.editProfile(context,firstName.text,lastName.text,selectedDate,genderSelectedItem,maritalSelectedItem,nationalitySelectedItem,userName.text,emailId.text,"91",mobileNo.text,address.text, edGraduation.text,edIntermediate.text,edHigh.text)
+                            }
                         }else{
-                            userViewModel.editProfile(context,firstName.text,lastName.text,selectedDate,genderSelectedItem,maritalSelectedItem,nationalitySelectedItem,userName.text,emailId.text,"91",mobileNo.text,address.text, edGraduation.text,edIntermediate.text,edHigh.text)
+                            isEditClick = true
+                            isEditName = "Save"
+
                         }
+
                     },
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier,
@@ -393,7 +408,7 @@ fun PersonalLayout(response: EmployeeDetailResposne.Result?,userViewModel: UserV
                     )
                 ) {
                     Text(
-                        text = "Edit",
+                        text = isEditName,
                         textAlign = TextAlign.End,
                         color = Color.White,
                         fontSize = 14.sp,
@@ -411,8 +426,6 @@ fun PersonalLayout(response: EmployeeDetailResposne.Result?,userViewModel: UserV
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-
-
                     val (lytFName, spacerFName, lytLName, spacerLName, lytDob, spacerDob, lytGender, spacerGender, lytMarital, spacerMarital,lytNationality,spacerNationality,txtContact) = createRefs()
                     val(lytUserName, spacerUName,lytEmailId,spaceEmail,lytMobile, spacerMobile,lytAddress,spacerAddress,lytEducation,lytGraduation,spacerGraduation,lytInter, spacerInter,lytHigh,spacerHigh) = createRefs()
 
@@ -448,6 +461,7 @@ fun PersonalLayout(response: EmployeeDetailResposne.Result?,userViewModel: UserV
                                 BasicTextField(
                                     value = firstName,
                                     onValueChange = { firstName = it },
+                                    Modifier.clickable { false },
                                     textStyle = TextStyle(
                                         fontSize = 17.sp,
                                         fontFamily = FontFamily(Font(R.font.poppins_semibold)),

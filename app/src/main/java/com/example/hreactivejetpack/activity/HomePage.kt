@@ -123,7 +123,7 @@ import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import com.example.hreactivejetpack.NavigationItem
 import com.example.hreactivejetpack.R
-import com.example.hreactivejetpack.files.AddEmployeeScreen
+import com.example.hreactivejetpack.files.ActivityScreen
 import com.example.hreactivejetpack.files.HomeScreen
 import com.example.hreactivejetpack.files.MailScreen
 import com.example.hreactivejetpack.files.PersonalLayout
@@ -134,12 +134,15 @@ import com.example.hreactivejetpack.ui.theme.HreactiveJetpackTheme
 import com.example.hreactivejetpack.utils.ApiState
 import com.example.hreactivejetpack.utils.FileUriUtils
 import com.example.hreactivejetpack.utils.GlobalVaribles
+import com.example.hreactivejetpack.utils.UserDataPref
 import com.example.hreactivejetpack.utils.Utils
 import com.example.hreactivejetpack.viewmodel.UserViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomePage : ComponentActivity() {
@@ -151,6 +154,8 @@ class HomePage : ComponentActivity() {
     var activitySpacer by mutableStateOf(false)
     private val viewModel: UserViewModel by viewModels()
     var imageUri by mutableStateOf<Uri?>(null)
+    @Inject
+    lateinit var userDataPref: UserDataPref
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -229,14 +234,14 @@ class HomePage : ComponentActivity() {
                 addEmployeeSpacer = false
                 mailSpacer = false
                 activitySpacer = false
-                HomeScreen(navHostController = navController)
+                HomeScreen(navHostController = navController,userDataPref)
             }
-            composable("Add"){
+            composable("Activity"){
                 homeSpacer = false
                 addEmployeeSpacer = false
                 mailSpacer = false
                 activitySpacer = true
-                AddEmployeeScreen(navController)
+                ActivityScreen(navController,userDataPref)
             }
             composable("Mail"){
                 homeSpacer = false
@@ -250,7 +255,7 @@ class HomePage : ComponentActivity() {
                 addEmployeeSpacer = true
                 mailSpacer = false
                 activitySpacer = false
-                ProfileScreen(viewModel = viewModel, navController)
+                ProfileScreen(viewModel = viewModel, navController,userDataPref)
             }
         }
     }
@@ -327,7 +332,7 @@ class HomePage : ComponentActivity() {
 
                     }
                     Column(
-                        modifier = Modifier.clickable { navController.navigate("Add")
+                        modifier = Modifier.clickable { navController.navigate("Activity")
                             homeSpacer = false
                             activitySpacer = true
                             addEmployeeSpacer = false
@@ -437,10 +442,17 @@ class HomePage : ComponentActivity() {
     fun TopBar(scaffoldState: ScaffoldState) {
         val usersState by viewModel.users
         val context = LocalContext.current
-
         var userName = "User Name"
         var designation = "Designation"
-        LaunchedEffect(key1 = Unit) {
+        runBlocking {
+            launch {
+                imageUri = Uri.parse(userDataPref.getString(UserDataPref.PROFILE_PICTURE))
+                userName = userDataPref.getString(UserDataPref.FirstNAME)
+                designation = userDataPref.getString(UserDataPref.DESIGNATION)
+            }
+        }
+
+       /* LaunchedEffect(key1 = Unit) {
             viewModel.fetchUsers()
         }
         when(usersState) {
@@ -450,10 +462,10 @@ class HomePage : ComponentActivity() {
 
             is ApiState.Success -> {
                 val response = (usersState as ApiState.Success<EmployeeDetailResposne>)
-                userName = (response.data?.result?.firstName ?: "") +  " " + (response.data?.result?.lastName
-                    ?: "")
+             //   userName = (response.data?.result?.firstName ?: "") +  " " + (response.data?.result?.lastName
+               //     ?: "")
                 designation = response.data?.result?.designation ?: ""
-                imageUri = Uri.parse(response.data?.result?.profilePicturePath ?: "")
+              //  imageUri = Uri.parse(response.data?.result?.profilePicturePath ?: "")
             }
 
             is ApiState.Error -> {
@@ -469,7 +481,7 @@ class HomePage : ComponentActivity() {
             else -> {
 
             }
-        }
+        }*/
         val coroutineScope = rememberCoroutineScope()
         val gradientBrush = Brush.horizontalGradient(
             colors = listOf(
@@ -660,9 +672,9 @@ class HomePage : ComponentActivity() {
                                    start.linkTo(parent.start)
                                    end.linkTo(parent.end)
                                }) {
-                           MenuItem(text = "Home", iconResId = R.drawable.home_icon, onClick = { navController.navigate("Mail") })
-                           MenuItem(text = "Performance Ratings", iconResId = R.drawable.home_icon, onClick = { navController.navigate("profileScreen") })
-                           MenuItem(text = "Company Policy", iconResId = R.drawable.home_icon, onClick = { navController.navigate("settingsScreen") })
+                           MenuItem(text = "Activity", iconResId = R.drawable.home_icon, onClick = { startActivity(Intent(this@HomePage,TestActivity::class.java)) })
+                           MenuItem(text = "Performance Ratings", iconResId = R.drawable.home_icon, onClick = { navController.navigate("Home") })
+                           MenuItem(text = "Company Policy", iconResId = R.drawable.home_icon, onClick = { navController.navigate("Profile") })
 
                        }
                    }

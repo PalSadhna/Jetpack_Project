@@ -68,15 +68,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import com.example.hreactivejetpack.utils.UserDataPref
+import javax.inject.Inject
 
 
 @Composable
-fun HomeScreen(navHostController: NavHostController){
-    SetHomeUi(navHostController)
+fun HomeScreen(navHostController: NavHostController,userDataPref: UserDataPref){
+    SetHomeUi(navHostController,userDataPref)
 }
 
 @Composable
-fun SetHomeUi(navHostController: NavHostController) {
+fun SetHomeUi(navHostController: NavHostController,userDataPref: UserDataPref) {
     val gradientBrush = Brush.horizontalGradient(colors = listOf( colorResource(id = R.color.start_color), // Start color
         colorResource(id = R.color.end_color)  // End color
     ))

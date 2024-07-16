@@ -11,20 +11,25 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +61,7 @@ import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -77,6 +84,8 @@ import com.example.hreactivejetpack.utils.UserDataPref
 import com.example.hreactivejetpack.utils.Utils
 import com.example.hreactivejetpack.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 
@@ -112,6 +121,14 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun img(viewModel: UserViewModel){
+    runBlocking {
+        launch {
+            if (userDataPref.isUserLoggedIn()){
+                startActivity(Intent(this@MainActivity, HomePage::class.java))
+            }
+        }
+    }
+
     val drawable = AppCompatResources.getDrawable(LocalContext.current,
         R.drawable.back_img_drawable
     )
@@ -126,11 +143,19 @@ fun img(viewModel: UserViewModel){
     val password = remember {
         mutableStateOf(TextFieldValue())
     }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val keyboardHeight = WindowInsets.ime.getBottom(LocalDensity.current)
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf( colorResource(id = R.color.start_color), // Start color
             colorResource(id = R.color.end_color)  // End color
         ),
     )
+    LaunchedEffect(key1 = keyboardHeight) {
+        coroutineScope.launch {
+            scrollState.scrollBy(keyboardHeight.toFloat())
+        }
+    }
     if (isCallApi){
         println("sadhna Api Call")
         if (email.value.text.isEmpty()){
@@ -142,130 +167,134 @@ fun img(viewModel: UserViewModel){
         }
         isCallApi = false
     }
-    Column(modifier = Modifier.background(Color.White)) {
-        Row(Modifier
+    Row(modifier = Modifier
+        .fillMaxSize()
+        .background(Color.White)
+        .verticalScroll(scrollState)){
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(Modifier
                 .fillMaxWidth()) {
-            Box(Modifier
-                .fillMaxWidth()) {
-                Column(
-                    Modifier
-                        .width(100.dp)
-                        .height(100.dp)
-                        .align(Alignment.CenterStart)) {
-                    Row(Modifier.paint(painterResource(id = R.drawable.back_button_transperent_icon)), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painterResource(id = R.drawable.back), contentDescription = "Back Image", modifier = Modifier
-                                .padding(10.dp)
-                                .height(20.dp)
-                                .width(20.dp))
+                Box(Modifier
+                    .fillMaxWidth()) {
+                    Column(
+                        Modifier
+                            .width(100.dp)
+                            .height(100.dp)
+                            .align(Alignment.CenterStart)) {
+                        Row(Modifier.paint(painterResource(id = R.drawable.back_button_transperent_icon)), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painterResource(id = R.drawable.back), contentDescription = "Back Image", modifier = Modifier
+                                    .padding(10.dp)
+                                    .height(20.dp)
+                                    .width(20.dp))
+                        }
+                    }
+                    Column(modifier = Modifier.align(Alignment.CenterEnd)) {
+                        Text(text = "Login",
+                            Modifier
+                                .padding(end = 20.dp, bottom = 20.dp)
+                                .align(Alignment.End),
+                            style = TextStyle(textAlign = TextAlign.End,
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold)), color = colorResource(
+                                    id = R.color.app_blue_color
+                                ), fontSize = 20.sp))
                     }
                 }
-                Column(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    Text(text = "Login",
-                        Modifier
-                            .padding(end = 20.dp, bottom = 20.dp)
-                            .align(Alignment.End),
-                        style = TextStyle(textAlign = TextAlign.End,
-                            fontFamily = FontFamily(Font(R.font.poppins_semibold)), color = colorResource(
-                                id = R.color.app_blue_color
-                            ), fontSize = 20.sp))
-                }
+
+            }
+            Row(horizontalArrangement = Arrangement.Center) { Image(painter = painterResource(id = R.drawable.login_icon), contentDescription = "Login Image", modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .padding(10.dp))
+            }
+            Row {
+                TextField(
+                    value = email.value,
+                    onValueChange = { email.value = it },
+                    label = { Text(text = "Official mail id",
+                        style = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Color.Black, fontSize = 12.sp)
+                    )},
+                    placeholder = { Text(text = "Enter your email id")},
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done),
+                    textStyle = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Gray, fontSize = 14.sp),
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.email),
+                            contentDescription = "Person Icon",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = colorResource(id = R.color.sky_color)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp)
+                        .border(
+                            2.dp,
+                            color = colorResource(id = R.color.login_edit_stroke_color),
+                            shape = CircleShape
+                        )
+                        .background(
+                            color = colorResource(id = R.color.login_edit_background),
+                            shape = CircleShape
+                        )
+                        .shadow(4.dp, CircleShape)
+                )
             }
 
-        }
-        Row(horizontalArrangement = Arrangement.Center) { Image(painter = painterResource(id = R.drawable.login_icon), contentDescription = "Login Image", modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp)
-            .padding(10.dp))
-        }
-        Row {
-            TextField(
-                value = email.value,
-                onValueChange = { email.value = it },
-                label = { Text(text = "Official mail id",
-                    style = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Color.Black, fontSize = 12.sp)
-                )},
-                placeholder = { Text(text = "Enter your email id")},
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done),
-                textStyle = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Gray, fontSize = 14.sp),
-                trailingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.email),
-                        contentDescription = "Person Icon",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = colorResource(id = R.color.sky_color)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp)
-                    .border(
-                        2.dp,
-                        color = colorResource(id = R.color.login_edit_stroke_color),
-                        shape = CircleShape
-                    )
-                    .background(
-                        color = colorResource(id = R.color.login_edit_background),
-                        shape = CircleShape
-                    )
-                    .shadow(4.dp, CircleShape)
-            )
-        }
+            Row() {
+                TextField(value = password.value,
+                    onValueChange = {
+                        password.value = it
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done),
+                    trailingIcon = {
+                        Icon(painter = painterResource(id = R.drawable.password), contentDescription = "Password Icon",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    label = { Text(text = "Password",
+                        style = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Color.Black, fontSize = 12.sp)
+                    )},
+                    placeholder = { Text(text = "Enter your password")},
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = colorResource(id = R.color.sky_color),
+                    ),
+                    textStyle = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Gray, fontSize = 14.sp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, top = 10.dp)
+                        .border(
+                            2.dp,
+                            color = colorResource(id = R.color.login_edit_stroke_color),
+                            shape = CircleShape
+                        )
+                        .shadow(4.dp, CircleShape)
+                )
+            }
 
-        Row() {
-            TextField(value = password.value,
-                onValueChange = {
-                    password.value = it
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done),
-                trailingIcon = {
-                               Icon(painter = painterResource(id = R.drawable.password), contentDescription = "Password Icon",
-                                   tint = Color.Unspecified,
-                                   modifier = Modifier.size(20.dp)
-                               )
-                },
-                label = { Text(text = "Password",
-                    style = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Color.Black, fontSize = 12.sp)
-                )},
-                placeholder = { Text(text = "Enter your password")},
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = colorResource(id = R.color.sky_color),
-                ),
-                textStyle = TextStyle(fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Gray, fontSize = 14.sp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 10.dp)
-                    .border(
-                        2.dp,
-                        color = colorResource(id = R.color.login_edit_stroke_color),
-                        shape = CircleShape
-                    )
-                    .shadow(4.dp, CircleShape)
-            )
-        }
-
-        Row(modifier = Modifier
-            .padding(top = 10.dp)
-            .fillMaxWidth()
-            .height(70.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(
-                onClick = {
-                    isCallApi = true
-                          },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-            ) {
-               Box(modifier = Modifier
-                   .height(70.dp)
-                   .fillMaxWidth()
-                   .background(gradientBrush, RoundedCornerShape(20.dp))
-                   ){
+            Row(modifier = Modifier
+                .padding(top = 10.dp)
+                .fillMaxWidth()
+                .height(70.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(
+                    onClick = {
+                        isCallApi = true
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Box(modifier = Modifier
+                        .height(70.dp)
+                        .fillMaxWidth()
+                        .background(gradientBrush, RoundedCornerShape(20.dp))
+                    ){
                         Text(text = "LOGIN", fontSize = 20.sp, modifier = Modifier.align(Alignment.Center), color = White)
                         Icon(
                             painterResource(id = R.drawable.next_arrow),
@@ -277,81 +306,83 @@ fun img(viewModel: UserViewModel){
                                 .width(20.dp)
                                 .align(Alignment.CenterEnd)
                         )
+                    }
                 }
             }
-        }
 
-        Row(modifier = Modifier
-            .align(Alignment.End)
-            .padding(end = 30.dp)) {
-            Text(
-                text = "Forgot Password",
-                fontSize = 12.sp,
-                color = Color.Red,
-                fontFamily = FontFamily(Font(R.font.poppins_semibold))
-            )
-        }
-
-        Row(modifier = Modifier
-            .align(Alignment.CenterHorizontally)
-            .padding(top = 20.dp, start = 10.dp, end = 10.dp)) {
-            Column( modifier = Modifier.width(50.dp)) {
-              Divider(thickness = 1.dp, color = Color.Blue)
+            Row(modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = 30.dp)) {
+                Text(
+                    text = "Forgot Password",
+                    fontSize = 12.sp,
+                    color = Color.Red,
+                    fontFamily = FontFamily(Font(R.font.poppins_semibold))
+                )
             }
-            Column() {
-                Text(text = "OR", fontFamily = FontFamily(Font(R.font.poppins_semibold)), color = Blue)
+
+            Row(modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 20.dp, start = 10.dp, end = 10.dp)) {
+                Column( modifier = Modifier.width(50.dp)) {
+                    Divider(thickness = 1.dp, color = Color.Blue)
+                }
+                Column() {
+                    Text(text = "OR", fontFamily = FontFamily(Font(R.font.poppins_semibold)), color = Blue)
+                }
+                Column( modifier = Modifier.width(50.dp)) {
+                    Divider(thickness = 1.dp, color = Color.Blue)
+                }
             }
-            Column( modifier = Modifier.width(50.dp)) {
-                Divider(thickness = 1.dp, color = Color.Blue)
-            }
-        }
 
 
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .weight(1f)) {
-            Box(modifier = Modifier
+            Row(modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()) {
-                Image(painter = painterResource(id = R.drawable.login_bottom_left_icon), contentDescription = "Bottom", modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .width(100.dp)
-                    .height(100.dp))
-                Row(modifier = Modifier
-                    .padding(top = 20.dp, start = 100.dp, end = 100.dp)
-                    .align(Alignment.Center)
-                    .fillMaxWidth()) {
-                    Column {
-                        Text(text = "Don't have an account?", fontSize = 12.sp, color = Black, fontFamily = FontFamily(Font(
-                            R.font.josefin_sans_medium
-                        )))
+                .height(100.dp)
+                .weight(1f)) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()) {
+                    Image(painter = painterResource(id = R.drawable.login_bottom_left_icon), contentDescription = "Bottom", modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(100.dp)
+                        .height(100.dp))
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, start = 100.dp, end = 100.dp)
+                        .align(Alignment.Center)
+                        .fillMaxWidth()) {
+                        Column {
+                            Text(text = "Don't have an account?", fontSize = 12.sp, color = Black, fontFamily = FontFamily(Font(
+                                R.font.josefin_sans_medium
+                            )))
+                        }
+                        Column {
+                            Text(text = "Register", fontSize = 12.sp, color = colorResource(id = R.color.app_blue_color), fontFamily = FontFamily(Font(
+                                R.font.poppins_semibold
+                            )))
+                        }
                     }
-                    Column {
-                        Text(text = "Register", fontSize = 12.sp, color = colorResource(id = R.color.app_blue_color), fontFamily = FontFamily(Font(
-                            R.font.poppins_semibold
-                        )))
-                    }
+                    Image(painter = painterResource(id = R.drawable.login_right_icon), contentDescription = "Bottomnew", modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .width(100.dp))
                 }
-                Image(painter = painterResource(id = R.drawable.login_right_icon), contentDescription = "Bottomnew", modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .width(100.dp))
             }
-        }
 
+        }
     }
+
 
 }
 
 @Composable
 fun callApi(context: Context, viewModel: UserViewModel, email: MutableState<TextFieldValue>, password: MutableState<TextFieldValue>) {
     println("sadhna Call Api")
-    val apiResponse by viewModel.loginResponse.observeAsState(emptyList<>())
+   // val apiResponse by viewModel.loginResponse.observeAsState(emptyList<>())
     LaunchedEffect(key1 = Unit) {
         val userModel = LoginModel(email.value.text,password.value.text,"296177D1-FFF1-4AF5-AECB-CB2C4D595474","Delhi","","")
         viewModel.userLogin(context,userModel)
     }
-/*    viewModel.loginResponse.observe(this) { response ->
+    viewModel.loginResponse.observe(this) { response ->
         when (response) {
             is ApiState.Loading -> {
                 println("sadhna Api Load")
@@ -359,8 +390,23 @@ fun callApi(context: Context, viewModel: UserViewModel, email: MutableState<Text
             }
 
             is ApiState.Success -> {
-                println("sadhna Api Sucess")
+                println("sadhna Api Success")
                // Utils.showToast(context, "Login Success")
+                val loginResponse = response.data?.result
+                runBlocking {
+                    launch {
+                        userDataPref.setUserLoggedInStatus(true)
+                        if (loginResponse != null) {
+                            userDataPref.setInt(UserDataPref.USERID,loginResponse.id)
+                            userDataPref.setString(UserDataPref.FirstNAME,loginResponse.firstName)
+                            userDataPref.setString(UserDataPref.LASTNAME,loginResponse.lastName)
+                            userDataPref.setInt(UserDataPref.ORG_ID,loginResponse.organizationId)
+                            userDataPref.setString(UserDataPref.TOKEN,response.data.token)
+                            userDataPref.setString(UserDataPref.PROFILE_PICTURE,loginResponse.profilePicturePath)
+                            userDataPref.setString(UserDataPref.DESIGNATION,loginResponse.designation)
+                        }
+                    }
+                }
                 context.startActivity(Intent(context, HomePage::class.java))
             }
 
@@ -372,7 +418,10 @@ fun callApi(context: Context, viewModel: UserViewModel, email: MutableState<Text
 
             else -> {}
         }
-    }*/
+    }
+
+
+
 }
 
 

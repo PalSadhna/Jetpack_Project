@@ -12,11 +12,11 @@
         <item name="colorOnSecondary">@color/ibs_app_theme</item>
         <!-- Status bar color. -->
         <!-- Customize your theme here. -->
-        <item name="android:windowDisablePreview">true</item>
         <item name="colorAccent">@color/ibs_app_theme</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
-        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
-        <item name="android:statusBarColor" tools:targetApi="l">@color/ibs_app_theme</item>
+        <item name="android:windowLightStatusBar" >true</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>
 
     </style>
 

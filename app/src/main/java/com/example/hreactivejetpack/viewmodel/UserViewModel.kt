@@ -35,7 +35,7 @@ class UserViewModel @Inject constructor(private val apiInterface: ApiInterface):
     val users: State<ApiState<EmployeeDetailResposne>> = _users
     private val _editProfile = mutableStateOf<ApiState<EditProfileResponse>>(ApiState.Loading())
     val editProfileResponse: State<ApiState<EditProfileResponse>> = _editProfile
-    private val _login = MutableLiveData<ApiState<LoginResponse>>()
+    private val _login:MutableLiveData<ApiState<LoginResponse>> = MutableLiveData()
     val loginResponse: LiveData<ApiState<LoginResponse>> = _login
     fun fetchUsers() {
         viewModelScope.launch {

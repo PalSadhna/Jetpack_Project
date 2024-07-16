@@ -20,7 +20,7 @@ class UserDataPref @Inject constructor (@ApplicationContext private val context:
         private val Context.dataStore by preferencesDataStore(name = "HreactiveDatabase")
         val FirstNAME = stringPreferencesKey("firstName")
         val LASTNAME = stringPreferencesKey("lastName")
-        val USERID = intPreferencesKey("candidateId")
+        val USERID = intPreferencesKey("EmployeeId")
         val ORG_ID = intPreferencesKey("orgId")
         val TOKEN = stringPreferencesKey("token")
         val IS_USER_LOGGED_IN = booleanPreferencesKey("isLoggedIn")
