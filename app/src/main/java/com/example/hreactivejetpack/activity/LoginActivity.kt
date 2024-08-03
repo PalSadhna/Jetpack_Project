@@ -157,7 +157,6 @@ fun img(viewModel: UserViewModel){
         }
     }
     if (isCallApi){
-        println("sadhna Api Call")
         if (email.value.text.isEmpty()){
             Utils.showToast(context,"Email field can't be empty")
         }else if (password.value.text.isEmpty()){
